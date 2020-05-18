@@ -14,6 +14,8 @@ I couldn't find a Python implementation of Window's PE CheckSum, so I adapated t
 https://stackoverflow.com/questions/6429779/can-anyone-define-the-windows-pe-checksum-algorithm
 
 ## Todo
-- Add validation to the input PE file
+- Only trim the overlay of a PE (not point trimming into any well defined sections)
+- Make the output look nice/add optional logging
 - Clean up the code (ideally put it in a class)
+- Add validation to the input PE file
 - Add some tests?
