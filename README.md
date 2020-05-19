@@ -15,6 +15,6 @@ https://stackoverflow.com/questions/6429779/can-anyone-define-the-windows-pe-che
 
 ## Todo
 - Make the output look nice/add optional logging
-- Clean up the code (ideally put it in a class)
+- Further code cleanup (docstrings, some extra refactoring, etc.)
 - Add validation to the input PE file
 - Add some tests?
