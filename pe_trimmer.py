@@ -171,12 +171,25 @@ class PETrimmer:
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python pe_trimmer.py <PE_FILE> <OUTPUT_FILE>")
-        sys.exit()
+    parser = argparse.ArgumentParser(
+        description=(
+            "Attempt to correct the CheckSum of a PE file by iteratively removing bytes from the overlay."
+        )
+    )
+    parser.add_argument(
+        "--debug", help="Enable debug logging", action="store_true", default=False,
+    )
+    parser.add_argument(
+        "-i", "--input", help="Input PE file path", type=str, required=True,
+    )
+    parser.add_argument(
+        "-o", "--output", help="Output (trimmed) PE file path", type=str, required=True,
+    )
 
-    input_file_path = sys.argv[1]
-    output_file_path = sys.argv[2]
+    args = parser.parse_args()
+
+    input_file_path = args.input
+    output_file_path = args.output
 
     pe_trimmer = PETrimmer()
     pe_trimmer.load_pe_data(input_file_path)
