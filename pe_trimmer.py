@@ -165,7 +165,7 @@ if pe_trimmer.get_true_pe_checksum() == pe_trimmer.get_calculated_pe_checksum():
 
 else:
     print("The CheckSum of %s does not match the calculated CheckSum.\n" % input_file_path)
-    print('Overlay offset: %s\n' % (hex(pe_trimmer.get_overlay_offset())))
+    print('Overlay offset: %s' % (hex(pe_trimmer.get_overlay_offset())))
 
     max_steps = len(pe_trimmer.get_pe_data()) - pe_trimmer.get_overlay_offset()
 
