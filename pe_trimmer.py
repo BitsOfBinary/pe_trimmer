@@ -1,6 +1,7 @@
 import struct
 import sys
 import argparse
+import logging
 
 
 class ParsedPEHeader:
@@ -188,6 +189,11 @@ def main():
 
     args = parser.parse_args()
 
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     input_file_path = args.input
     output_file_path = args.output
 
@@ -196,25 +202,27 @@ def main():
     pe_trimmer.parse_pe_header()
     pe_trimmer.calculate_pe_checksum()
 
-    print("PE CheckSum from header: %s" % (hex(pe_trimmer.get_true_pe_checksum())))
-    print(
+    logging.info(
+        "PE CheckSum from header: %s" % (hex(pe_trimmer.get_true_pe_checksum()))
+    )
+    logging.info(
         "Calculated PE CheckSum: %s\n" % (hex(pe_trimmer.get_calculated_pe_checksum()))
     )
 
     if pe_trimmer.get_true_pe_checksum() == pe_trimmer.get_calculated_pe_checksum():
-        print("The CheckSum of %s is already correct." % input_file_path)
+        logging.info("The CheckSum of %s is already correct." % input_file_path)
 
     else:
-        print(
+        logging.info(
             "The CheckSum of %s does not match the calculated CheckSum.\n"
             % input_file_path
         )
-        print("Overlay offset: %s" % (hex(pe_trimmer.get_overlay_offset())))
+        logging.info("Overlay offset: %s" % (hex(pe_trimmer.get_overlay_offset())))
 
         max_steps = len(pe_trimmer.get_pe_data()) - pe_trimmer.get_overlay_offset()
 
-        print("Max iterations to take: %d\n" % max_steps)
-        print("Beginning to remove bytes...\n")
+        logging.info("Max iterations to take: %d\n" % max_steps)
+        logging.info("Beginning to remove bytes...\n")
 
         for i in range(1, max_steps):
             pe_trimmer.trim_pe_data()
@@ -229,16 +237,16 @@ def main():
                 break
 
             if i == max_steps:
-                print("Max iterations reached, CheckSums don't match.\n")
+                logging.info("Max iterations reached, CheckSums don't match.\n")
                 sys.exit()
 
-        print("CheckSums match!")
-        print("Iterations taken: %d\n" % i)
+        logging.info("CheckSums match!")
+        logging.info("Iterations taken: %d\n" % i)
 
         with open(output_file_path, "wb") as outfile:
             outfile.write(pe_trimmer.get_pe_data())
 
-        print("Saved output binary to: %s" % output_file_path)
+        logging.info("Saved output binary to: %s" % output_file_path)
 
 
 if __name__ == "__main__":
