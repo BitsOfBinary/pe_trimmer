@@ -80,6 +80,7 @@ class ParsedPEHeader:
         self.calculate_final_section_raw_size()
         self.calculate_end_of_final_section_offset()
 
+
 class PETrimmer:
     pe_data = None
     calculated_pe_checksum = None
@@ -148,41 +149,28 @@ if len(sys.argv) != 3:
     print("Usage: python pe_trimmer.py <PE_FILE> <OUTPUT_FILE>")
     sys.exit()
 
-filename = sys.argv[1]
-output_filename = sys.argv[2]
+input_file_path = sys.argv[1]
+output_file_path = sys.argv[2]
 
 pe_trimmer = PETrimmer()
-pe_trimmer.load_pe_data(filename)
+pe_trimmer.load_pe_data(input_file_path)
 pe_trimmer.parse_pe_header()
 pe_trimmer.calculate_pe_checksum()
 
-print("True PE CheckSum:")
-print(hex(pe_trimmer.get_true_pe_checksum()))
-print('')
-
-print("Calculated PE CheckSum:")
-print(hex(pe_trimmer.get_calculated_pe_checksum()))
-print('')
+print("PE CheckSum from header: %s" % (hex(pe_trimmer.get_true_pe_checksum())))
+print("Calculated PE CheckSum: %s\n" % (hex(pe_trimmer.get_calculated_pe_checksum())))
 
 if pe_trimmer.get_true_pe_checksum() == pe_trimmer.get_calculated_pe_checksum():
-    print("The CheckSum of the input is already correct.")
+    print("The CheckSum of %s is already correct." % input_file_path)
 
 else:
-    print("The CheckSum of the PE does not match the calculated CheckSum.")
-    print('')
-
-    print('Overlay offset:')
-    print(hex(pe_trimmer.get_overlay_offset()))
-    print('')
+    print("The CheckSum of %s does not match the calculated CheckSum.\n" % input_file_path)
+    print('Overlay offset: %s\n' % (hex(pe_trimmer.get_overlay_offset())))
 
     max_steps = len(pe_trimmer.get_pe_data()) - pe_trimmer.get_overlay_offset()
 
-    print('Max iterations to take:')
-    print(max_steps)
-    print('')
-
-    print("Beginning to remove bytes...")
-    print('')
+    print('Max iterations to take: %d\n' % max_steps)
+    print("Beginning to remove bytes...\n")
 
     for i in range(1, max_steps):
         pe_trimmer.trim_pe_data()
@@ -194,15 +182,13 @@ else:
             break
 
         if i == max_steps:
-            print("Max iterations reached, CheckSums don't match.")
+            print("Max iterations reached, CheckSums don't match.\n")
             sys.exit()
 
     print("CheckSums match!")
-    print("Iterations taken:")
-    print(str(i))
-    print('')
+    print("Iterations taken: %d\n" % i)
 
-    with open(output_filename, "wb") as outfile:
+    with open(output_file_path, "wb") as outfile:
         outfile.write(pe_trimmer.get_pe_data())
 
-    print('Saved output binary to: ' + output_filename)
+    print('Saved output binary to: %s' % output_file_path)
