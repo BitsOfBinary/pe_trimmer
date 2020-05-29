@@ -5,45 +5,47 @@ import logging
 
 
 class ParsedPEHeader:
-    pe_header_offset = None
-    checksum_offset = None
-    pe_checksum = None
-    optional_header_offset = None
-    optional_header_size = None
-    section_table_offset = None
-    number_of_sections = None
-    final_section_table_entry_offset = None
-    final_section_offset = None
-    final_section_raw_size = None
-    end_of_final_section_offset = None
-
     def __init__(self, pe_data):
         self.pe_data = pe_data
+        self.pe_header_offset = None
+        self.checksum_offset = None
+        self.pe_checksum = None
+        self.optional_header_offset = None
+        self.optional_header_size = None
+        self.section_table_offset = None
+        self.number_of_sections = None
+        self.final_section_table_entry_offset = None
+        self.final_section_offset = None
+        self.final_section_raw_size = None
+        self.end_of_final_section_offset = None
+
+    @staticmethod
+    def read_dword(data, offset):
+        return struct.unpack("I", data[offset : offset + 4])[0]
+
+    @staticmethod
+    def read_word(data, offset):
+        return struct.unpack("H", data[offset : offset + 2])[0]
 
     def calculate_pe_header_offset(self):
         # 0x3c in is the PE header offset
-        self.pe_header_offset = struct.unpack("I", self.pe_data[0x3C : 0x3C + 4])[0]
+        self.pe_header_offset = self.read_dword(self.pe_data, 0x3C)
 
     def calculate_checksum_offset(self):
         # 0x58 offset into the PE header is the CheckSum value
         self.checksum_offset = self.pe_header_offset + 0x58
 
     def calculate_checksum(self):
-        self.pe_checksum = struct.unpack(
-            "I", self.pe_data[self.checksum_offset : self.checksum_offset + 4]
-        )[0]
+        self.pe_checksum = self.read_dword(self.pe_data, self.checksum_offset)
 
     def calculate_optional_header_offset(self):
         self.optional_header_offset = self.pe_header_offset + 24
 
     def calculate_optional_header_size(self):
         size_of_optional_header_offset = self.pe_header_offset + 20
-        self.optional_header_size = struct.unpack(
-            "H",
-            self.pe_data[
-                size_of_optional_header_offset : size_of_optional_header_offset + 2
-            ],
-        )[0]
+        self.optional_header_size = self.read_word(
+            self.pe_data, size_of_optional_header_offset
+        )
 
     def calculate_section_table_offset(self):
         self.section_table_offset = (
@@ -60,24 +62,14 @@ class ParsedPEHeader:
         )
 
     def calculate_final_section_offset(self):
-        self.final_section_offset = struct.unpack(
-            "I",
-            self.pe_data[
-                self.final_section_table_entry_offset
-                + 20 : self.final_section_table_entry_offset
-                + 24
-            ],
-        )[0]
+        self.final_section_offset = self.read_dword(
+            self.pe_data, self.final_section_table_entry_offset + 20
+        )
 
     def calculate_final_section_raw_size(self):
-        self.final_section_raw_size = struct.unpack(
-            "I",
-            self.pe_data[
-                self.final_section_table_entry_offset
-                + 16 : self.final_section_table_entry_offset
-                + 20
-            ],
-        )[0]
+        self.final_section_raw_size = self.read_dword(
+            self.pe_data, self.final_section_table_entry_offset + 16
+        )
 
     def calculate_end_of_final_section_offset(self):
         self.end_of_final_section_offset = (
@@ -221,6 +213,9 @@ class PETrimmer:
 
 
 def main():
+    """
+    Entry point when called from the command line. Will construct and call the main method of PETrimmer.
+    """
     parser = argparse.ArgumentParser(
         description=(
             "Attempt to correct the CheckSum of a PE file by iteratively removing bytes from the overlay."
