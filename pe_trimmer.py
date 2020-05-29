@@ -114,6 +114,10 @@ class PETrimmer:
     overlay_offset = None
     checksum_offset = None
 
+    def __init__(self, input_file_path, output_file_path):
+        self.input_file_path = input_file_path
+        self.output_file_path = output_file_path
+
     def calculate_pe_checksum(self):
         """
         Python implementation of Window's CheckSum
@@ -170,6 +174,51 @@ class PETrimmer:
     def get_pe_data(self):
         return self.pe_data
 
+    def run(self):
+        self.load_pe_data(self.input_file_path)
+        self.parse_pe_header()
+        self.calculate_pe_checksum()
+
+        logging.info("PE CheckSum from header: %s", (hex(self.get_true_pe_checksum())))
+        logging.info(
+            "Calculated PE CheckSum: %s\n", (hex(self.get_calculated_pe_checksum()))
+        )
+
+        if self.get_true_pe_checksum() == self.get_calculated_pe_checksum():
+            logging.info("The CheckSum of %s is already correct.", self.input_file_path)
+
+        else:
+            logging.info(
+                "The CheckSum of %s does not match the calculated CheckSum.\n",
+                self.input_file_path,
+            )
+            logging.info("Overlay offset: %s", (hex(self.get_overlay_offset())))
+
+            max_steps = len(self.get_pe_data()) - self.get_overlay_offset()
+
+            logging.info("Max iterations to take: %d\n", max_steps)
+            logging.info("Beginning to remove bytes...\n")
+
+            for i in range(1, max_steps):
+                self.trim_pe_data()
+
+                self.calculate_pe_checksum()
+
+                if self.get_true_pe_checksum() == self.get_calculated_pe_checksum():
+                    break
+
+                if i == max_steps:
+                    logging.info("Max iterations reached, CheckSums don't match.\n")
+                    sys.exit()
+
+            logging.info("CheckSums match!")
+            logging.info("Iterations taken: %d\n", i)
+
+            with open(self.output_file_path, "wb") as outfile:
+                outfile.write(self.get_pe_data())
+
+            logging.info("Saved output binary to: %s", self.output_file_path)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -194,59 +243,9 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    input_file_path = args.input
-    output_file_path = args.output
+    pe_trimmer = PETrimmer(args.input, args.output)
 
-    pe_trimmer = PETrimmer()
-    pe_trimmer.load_pe_data(input_file_path)
-    pe_trimmer.parse_pe_header()
-    pe_trimmer.calculate_pe_checksum()
-
-    logging.info(
-        "PE CheckSum from header: %s" % (hex(pe_trimmer.get_true_pe_checksum()))
-    )
-    logging.info(
-        "Calculated PE CheckSum: %s\n" % (hex(pe_trimmer.get_calculated_pe_checksum()))
-    )
-
-    if pe_trimmer.get_true_pe_checksum() == pe_trimmer.get_calculated_pe_checksum():
-        logging.info("The CheckSum of %s is already correct." % input_file_path)
-
-    else:
-        logging.info(
-            "The CheckSum of %s does not match the calculated CheckSum.\n"
-            % input_file_path
-        )
-        logging.info("Overlay offset: %s" % (hex(pe_trimmer.get_overlay_offset())))
-
-        max_steps = len(pe_trimmer.get_pe_data()) - pe_trimmer.get_overlay_offset()
-
-        logging.info("Max iterations to take: %d\n" % max_steps)
-        logging.info("Beginning to remove bytes...\n")
-
-        for i in range(1, max_steps):
-            pe_trimmer.trim_pe_data()
-
-            pe_trimmer.calculate_pe_checksum()
-
-            if (
-                pe_trimmer.get_true_pe_checksum()
-                == pe_trimmer.get_calculated_pe_checksum()
-            ):
-                iterations_done = i
-                break
-
-            if i == max_steps:
-                logging.info("Max iterations reached, CheckSums don't match.\n")
-                sys.exit()
-
-        logging.info("CheckSums match!")
-        logging.info("Iterations taken: %d\n" % i)
-
-        with open(output_file_path, "wb") as outfile:
-            outfile.write(pe_trimmer.get_pe_data())
-
-        logging.info("Saved output binary to: %s" % output_file_path)
+    pe_trimmer.run()
 
 
 if __name__ == "__main__":
