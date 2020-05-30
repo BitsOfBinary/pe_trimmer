@@ -6,7 +6,17 @@ To solve this, the PE Trimmer Python 3 script will iterate backwards through the
 
 ## Usage
 ```
-python pe_trimmer.py <PE_FILE> <OUTPUT_FILE>
+usage: pe_trimmer.py [-h] [--debug] -i INPUT -o OUTPUT
+
+Attempt to correct the CheckSum of a PE file by iteratively removing bytes from the overlay.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               Enable debug logging
+  -i INPUT, --input INPUT
+                        Input PE file path
+  -o OUTPUT, --output OUTPUT
+                        Output (trimmed) PE file path
 ```
 
 ## Credit
@@ -14,7 +24,4 @@ I couldn't find a Python implementation of Window's PE CheckSum, so I adapated t
 https://stackoverflow.com/questions/6429779/can-anyone-define-the-windows-pe-checksum-algorithm
 
 ## Todo
-- Make the output look nice/add optional logging
-- Further code cleanup (docstrings, some extra refactoring, etc.)
 - Add validation to the input PE file
-- Add some tests?
