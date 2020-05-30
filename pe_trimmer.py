@@ -178,23 +178,23 @@ class PETrimmer:
         self.parse_pe_header()
         self.calculate_pe_checksum()
 
-        logging.info("PE CheckSum from header: %s", (hex(self.true_pe_checksum)))
-        logging.info("Calculated PE CheckSum: %s\n", (hex(self.calculated_pe_checksum)))
+        logging.debug("PE CheckSum from header: %s", (hex(self.true_pe_checksum)))
+        logging.debug("Calculated PE CheckSum: %s", (hex(self.calculated_pe_checksum)))
 
         if self.true_pe_checksum == self.calculated_pe_checksum:
             logging.info("The CheckSum of %s is already correct.", self.input_file_path)
 
         else:
             logging.info(
-                "The CheckSum of %s does not match the calculated CheckSum.\n",
+                "The CheckSum of %s does not match the calculated CheckSum.",
                 self.input_file_path,
             )
-            logging.info("Overlay offset: %s", (hex(self.overlay_offset)))
+            logging.debug("Overlay offset: %s", (hex(self.overlay_offset)))
 
             max_steps = len(self.pe_data) - self.overlay_offset
 
-            logging.info("Max iterations to take: %d\n", max_steps)
-            logging.info("Beginning to remove bytes...\n")
+            logging.debug("Max iterations to take: %d", max_steps)
+            logging.info("Beginning to remove bytes...")
 
             for i in range(1, max_steps):
                 self.trim_pe_data()
@@ -205,11 +205,11 @@ class PETrimmer:
                     break
 
                 if i == max_steps:
-                    logging.info("Max iterations reached, CheckSums don't match.\n")
+                    logging.error("Max iterations reached, CheckSums don't match.\n")
                     sys.exit()
 
             logging.info("CheckSums match!")
-            logging.info("Iterations taken: %d\n", i)
+            logging.debug("Iterations taken: %d", i)
 
             with open(self.output_file_path, "wb") as outfile:
                 outfile.write(self.pe_data)
