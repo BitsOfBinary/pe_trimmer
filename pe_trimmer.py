@@ -7,6 +7,7 @@ import logging
 class ParsedPEHeader:
     def __init__(self, pe_data):
         self.pe_data = pe_data
+
         self.pe_header_offset = None
         self.checksum_offset = None
         self.pe_checksum = None
@@ -107,6 +108,11 @@ class PETrimmer:
     checksum_offset = None
 
     def __init__(self, input_file_path, output_file_path):
+        """
+        Constructor for PETrimmer
+        :param input_file_path: The file path to the input PE file
+        :param output_file_path: The file path to save the trimmed PE file
+        """
         self.input_file_path = input_file_path
         self.output_file_path = output_file_path
 
@@ -140,10 +146,17 @@ class PETrimmer:
         self.calculated_pe_checksum = checksum
 
     def load_pe_data(self, filename):
+        """
+        Read in the PE file as a bytearray
+        :param filename: The PE file to read in
+        """
         with open(filename, "rb") as infile:
             self.pe_data = bytearray(infile.read())
 
     def parse_pe_header(self):
+        """
+        Method to parse the PE header of the loaded PE file, and set required member variables to allow for trimming
+        """
         parsed_pe_header = ParsedPEHeader(self.pe_data)
         parsed_pe_header.parse_headers()
 
@@ -152,31 +165,23 @@ class PETrimmer:
         self.checksum_offset = parsed_pe_header.get_checksum_offset()
 
     def trim_pe_data(self):
+        """
+        Method to "trim" the loaded PE by removing its last byte
+        """
         del self.pe_data[-1]
 
-    def get_true_pe_checksum(self):
-        return self.true_pe_checksum
-
-    def get_calculated_pe_checksum(self):
-        return self.calculated_pe_checksum
-
-    def get_overlay_offset(self):
-        return self.overlay_offset
-
-    def get_pe_data(self):
-        return self.pe_data
-
     def run(self):
+        """
+        Main method of PETrimmer
+        """
         self.load_pe_data(self.input_file_path)
         self.parse_pe_header()
         self.calculate_pe_checksum()
 
-        logging.info("PE CheckSum from header: %s", (hex(self.get_true_pe_checksum())))
-        logging.info(
-            "Calculated PE CheckSum: %s\n", (hex(self.get_calculated_pe_checksum()))
-        )
+        logging.info("PE CheckSum from header: %s", (hex(self.true_pe_checksum)))
+        logging.info("Calculated PE CheckSum: %s\n", (hex(self.calculated_pe_checksum)))
 
-        if self.get_true_pe_checksum() == self.get_calculated_pe_checksum():
+        if self.true_pe_checksum == self.calculated_pe_checksum:
             logging.info("The CheckSum of %s is already correct.", self.input_file_path)
 
         else:
@@ -184,9 +189,9 @@ class PETrimmer:
                 "The CheckSum of %s does not match the calculated CheckSum.\n",
                 self.input_file_path,
             )
-            logging.info("Overlay offset: %s", (hex(self.get_overlay_offset())))
+            logging.info("Overlay offset: %s", (hex(self.overlay_offset)))
 
-            max_steps = len(self.get_pe_data()) - self.get_overlay_offset()
+            max_steps = len(self.pe_data) - self.overlay_offset
 
             logging.info("Max iterations to take: %d\n", max_steps)
             logging.info("Beginning to remove bytes...\n")
@@ -196,7 +201,7 @@ class PETrimmer:
 
                 self.calculate_pe_checksum()
 
-                if self.get_true_pe_checksum() == self.get_calculated_pe_checksum():
+                if self.true_pe_checksum == self.calculated_pe_checksum:
                     break
 
                 if i == max_steps:
@@ -207,7 +212,7 @@ class PETrimmer:
             logging.info("Iterations taken: %d\n", i)
 
             with open(self.output_file_path, "wb") as outfile:
-                outfile.write(self.get_pe_data())
+                outfile.write(self.pe_data)
 
             logging.info("Saved output binary to: %s", self.output_file_path)
 
