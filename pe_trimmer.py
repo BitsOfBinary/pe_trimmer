@@ -196,6 +196,7 @@ class PETrimmer:
             logging.debug("Max iterations to take: %d", max_steps)
             logging.info("Beginning to remove bytes...")
 
+            i = 0
             for i in range(1, max_steps):
                 self.trim_pe_data()
 
